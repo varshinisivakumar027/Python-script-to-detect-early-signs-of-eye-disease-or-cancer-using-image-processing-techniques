@@ -1,0 +1,35 @@
+function detectEyeDisease(imagePath)
+    % Read the image
+    img = imread(imagePath);
+    grayImg = rgb2gray(img);
+
+    % Blur image to reduce noise
+    blurred = imgaussfilt(grayImg, 2);
+
+    % Threshold the image (bright spots)
+    bw = imbinarize(blurred, 'adaptive', 'ForegroundPolarity','bright','Sensitivity',0.6);
+
+    % Remove small noise
+    bw = bwareaopen(bw, 100);
+
+    % Label connected components
+    stats = regionprops(bw, 'Area', 'BoundingBox');
+
+    % Display results
+    imshow(img);
+    hold on;
+    suspiciousRegions = 0;
+    for i = 1:length(stats)
+        if stats(i).Area > 200
+            suspiciousRegions = suspiciousRegions + 1;
+            rectangle('Position', stats(i).BoundingBox, 'EdgeColor','r', 'LineWidth', 2);
+        end
+    end
+    hold off;
+
+    if suspiciousRegions > 0
+        fprintf('⚠️ Detected %d suspicious region(s). Consider medical review.\n', suspiciousRegions);
+    else
+        fprintf('✅ No major abnormalities detected.\n');
+    end
+end
